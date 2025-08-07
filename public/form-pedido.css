@@ -1,0 +1,105 @@
+/* --- ESTILOS DE FORMULÁRIO --- */
+.form-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 100px 40px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.form-header::before, .form-header::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.form-header::before {
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    transform: rotate(45deg);
+}
+
+.form-header::after {
+    bottom: -80px;
+    right: -80px;
+    width: 250px;
+    height: 250px;
+}
+
+.form-header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.form-header p {
+    font-size: 1.1rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+.form-section {
+    padding: 30px;
+}
+
+#pedidoForm label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+#pedidoForm input,
+#pedidoForm textarea,
+#pedidoForm input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    color: var(--text-color);
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#pedidoForm input:focus,
+#pedidoForm textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(46, 34, 188, 0.2);
+}
+
+#pedidoForm textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+#pedidoForm input::placeholder,
+#pedidoForm textarea::placeholder {
+    color: #aaa;
+}
+
+.submit-button {
+    padding: 15px 25px;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.submit-button:hover {
+    background-color: var(--primary-light);
+}
