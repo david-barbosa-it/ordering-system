@@ -4,6 +4,8 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const os = require('os');
+const { Storage } = require('@google-cloud/storage');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,20 +16,13 @@ const faqData = require('./faqData');
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
 
-// Configuração do Multer
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const grupo = req.params.grupo;
-        const uploadDir = path.join(__dirname, `../uploads/${grupo}`);
-        fs.mkdirSync(uploadDir, { recursive: true });
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// --- Configuração do Google Cloud Storage ---
+const gcs = new Storage();
+const bucketName = 'ordering-system-container'; // SUBSTITUA PELO NOME DO SEU BUCKET
+const bucket = gcs.bucket(bucketName);
+
+// Configuração do Multer para a pasta temporária
+const upload = multer({ dest: os.tmpdir() });
 
 // --- ROTAS ESPECÍFICAS (sem parâmetros) VÊM PRIMEIRO ---
 
@@ -42,35 +37,21 @@ app.get('/api/faq', (req, res) => {
 });
 
 // Endpoint da API para listar todos os pedidos
-app.get('/api/pedidos', (req, res) => {
-    const pedidos = [];
-    const lerPedidosDoGrupo = (grupo) => {
-        const dirPath = path.join(__dirname, `../uploads/${grupo}`);
-        if (!fs.existsSync(dirPath)) return;
-        const files = fs.readdirSync(dirPath);
-
-        files.forEach(file => {
-            if (file.endsWith('.json')) {
-                const filePath = path.join(dirPath, file);
-                const fileContent = fs.readFileSync(filePath, 'utf8');
-                try {
-                    const pedido = JSON.parse(fileContent);
-                    pedido.grupo = grupo;
-                    pedidos.push(pedido);
-                } catch (error) {
-                    console.error(`Erro ao analisar JSON do arquivo ${file}:`, error);
-                }
-            }
-        });
-    };
-
+app.get('/api/pedidos', async (req, res) => {
     try {
-        lerPedidosDoGrupo('grupo-a');
-        lerPedidosDoGrupo('grupo-b');
+        const [files] = await bucket.getFiles({ prefix: 'pedidos/' });
+        const pedidos = [];
+        
+        for (const file of files) {
+            if (file.name.endsWith('.json')) {
+                const [content] = await file.download();
+                pedidos.push(JSON.parse(content.toString('utf8')));
+            }
+        }
         res.json(pedidos);
     } catch (error) {
-        console.error('Erro ao ler os pedidos:', error);
-        res.status(500).send('Erro interno do servidor ao carregar os pedidos.');
+        console.error('Erro ao buscar pedidos do GCS:', error);
+        res.status(500).send('Erro interno ao buscar pedidos.');
     }
 });
 
@@ -96,16 +77,25 @@ app.get('/download/assets/:filename', (req, res) => {
 });
 
 // Rota para servir os arquivos da pasta 'uploads' de forma dinâmica
+// AGORA LÊ O ARQUIVO DO GCS
 app.get('/uploads/:grupo/:filename', (req, res) => {
     const { grupo, filename } = req.params;
-    const filePath = path.join(__dirname, `../uploads/${grupo}`, filename);
+    const gcsPath = `comprovantes/${grupo}/${filename}`;
 
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send('Comprovante não encontrado.');
-    }
+    const file = bucket.file(gcsPath);
+
+    file.exists().then(([exists]) => {
+        if (exists) {
+            res.redirect(`https://storage.googleapis.com/${bucketName}/${gcsPath}`);
+        } else {
+            res.status(404).send('Comprovante não encontrado.');
+        }
+    }).catch(err => {
+        console.error('Erro ao verificar arquivo no GCS:', err);
+        res.status(500).send('Erro interno do servidor.');
+    });
 });
+
 
 // --- ROTAS DINÂMICAS VÊM POR ÚLTIMO ---
 
@@ -119,8 +109,8 @@ app.get('/:grupo', (req, res) => {
     }
 });
 
-// Rota POST dinâmica para processar pedidos e salvar comprovantes e dados em JSON
-app.post('/pedido/:grupo', upload.single('comprovante'), (req, res) => {
+// Rota POST dinâmica para processar pedidos e salvar comprovantes e dados em JSON no GCS
+app.post('/pedido/:grupo', upload.single('comprovante'), async (req, res) => {
     const grupo = req.params.grupo;
     const { solicitante, produtos } = req.body;
     const comprovante = req.file;
@@ -129,28 +119,65 @@ app.post('/pedido/:grupo', upload.single('comprovante'), (req, res) => {
         return res.status(400).send('Nenhum comprovante de pagamento foi enviado.');
     }
 
-    const pedidoData = {
-        solicitante: solicitante,
-        produtos: produtos,
-        comprovantePath: path.basename(comprovante.path),
-        dataPedido: new Date().toISOString()
-    };
+    try {
+        const comprovanteFileName = `comprovantes/${grupo}/${comprovante.filename}`;
+        
+// Use o streaming para enviar o arquivo
+        const gcsFile = bucket.file(comprovanteFileName);
+        const stream = gcsFile.createWriteStream({
+            metadata: {
+                contentType: comprovante.mimetype
+            }
+        });
 
-    const jsonFilePath = path.join(comprovante.destination, `pedido-${Date.now()}.json`);
+        // Crie um stream de leitura do arquivo temporário
+        const readStream = fs.createReadStream(comprovante.path);
+        
+        // Envie o arquivo para o GCS
+        await new Promise((resolve, reject) => {
+            readStream.pipe(stream)
+                .on('finish', () => {
+                    console.log('Upload do comprovante concluído.');
+                    resolve();
+                })
+                .on('error', (error) => {
+                    console.error('Erro no stream de upload:', error);
+                    reject(error);
+                });
+        });
+        
+        const comprovanteUrl = `https://storage.googleapis.com/${bucketName}/${comprovanteFileName}`;
 
-    fs.writeFile(jsonFilePath, JSON.stringify(pedidoData, null, 2), (err) => {
-        if (err) {
-            console.error('Erro ao salvar o arquivo JSON:', err);
-            return res.status(500).send('Erro interno do servidor.');
-        }
+        const pedidoData = {
+            solicitante: solicitante,
+            produtos: produtos,
+            grupo: grupo,
+            comprovantePath: comprovanteUrl, // Salva a URL pública
+            dataPedido: new Date().toISOString()
+        };
+
+        const jsonFileName = `pedidos/pedido-${Date.now()}.json`;
+
+        // Upload do arquivo JSON para o GCS
+        const file = bucket.file(jsonFileName);
+        await file.save(JSON.stringify(pedidoData, null, 2), {
+            contentType: 'application/json'
+        });
+
+        fs.unlinkSync(comprovante.path);
 
         console.log(`Novo pedido do Grupo: ${grupo}`);
-        console.log(`Dados do pedido salvos em: ${jsonFilePath}`);
-        console.log(`Comprovante salvo em: ${comprovante.path}`);
+        console.log(`Dados e comprovante salvos no GCS.`);
 
-        // --- AQUI ESTÁ A MUDANÇA: APENAS O REDIRECIONAMENTO ---
         res.redirect(`/${grupo}?sucesso=true`);
-    });
+
+    } catch (error) {
+        console.error('Erro no processamento do pedido:', error);
+        if (comprovante && fs.existsSync(comprovante.path)) {
+            fs.unlinkSync(comprovante.path);
+        }
+        res.status(500).send('Erro interno do servidor.');
+    }
 });
 
 app.listen(PORT, () => {

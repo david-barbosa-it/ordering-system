@@ -38,3 +38,7 @@ jspm_packages/
 *.swp
 .DS_Store
 .gitattributes
+
+.env
+gcs_key.json
+.gcs_key.json
