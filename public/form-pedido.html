@@ -1,57 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title id="pageTitle">Formulário de Pedido</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="form-pedido.css">
-
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="form-pedido.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
     <div class="container">
-        <header class="form-header">
-            <h1 id="formHeader">Formulário de Pedido</h1>
-            <p>Preencha os campos abaixo para enviar seu pedido.</p>
-        </header>
-        <div class="form-section">
-            <form id="pedidoForm" method="POST" enctype="multipart/form-data">
-                <label for="solicitante">Solicitante:</label>
-                <input type="text" id="solicitante" name="solicitante" placeholder="Seu nome completo" required>
-                
-                <label for="produtos">Produtos:</label>
-                <textarea id="produtos" name="produtos" placeholder="Preencha conforme exemplo: 1x Entanto de Testo, 1x Deca" required></textarea>
-                
-                <label for="comprovante">Comprovante de Pagamento:</label>
-                <input type="file" id="comprovante" name="comprovante" required>
-                
-                <button type="submit" class="submit-button">Enviar Pedido</button>
-            </form>
-        </div>
+      <header class="form-header">
+        <h1 id="formHeader">Formulário de Pedido</h1>
+        <p>Preencha os campos abaixo para enviar seu pedido.</p>
+      </header>
+      <div class="form-section">
+        <form id="pedidoForm" method="POST" enctype="multipart/form-data">
+          <label for="solicitante">Solicitante:</label>
+          <input
+            type="text"
+            id="solicitante"
+            name="solicitante"
+            placeholder="Seu nome completo"
+            required
+          />
+
+          <label for="produtos">Produtos:</label>
+          <textarea
+            id="produtos"
+            name="produtos"
+            placeholder="Preencha conforme exemplo: 1x Entanto de Testo, 1x Deca"
+            required
+          ></textarea>
+
+          <label for="comprovante">Comprovante de Pagamento:</label>
+          <input type="file" id="comprovante" name="comprovante" required />
+
+          <button type="submit" class="submit-button">Enviar Pedido</button>
+        </form>
+      </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('pedidoForm');
-            const path = window.location.pathname;
-            const grupo = path.split('/')[1];
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("pedidoForm");
+        const path = window.location.pathname;
+        const grupo = path.split("/")[1];
 
-            if (grupo) {
-                document.getElementById('pageTitle').textContent = `Formulário de Pedido - ${grupo.toUpperCase().replace('-', ' ')}`;
-                document.getElementById('formHeader').textContent = `Pedidos - ${grupo.toUpperCase().replace('-', ' ')}`;
-                form.action = `/pedido/${grupo}`;
-            }
+        if (grupo) {
+          document.getElementById(
+            "pageTitle"
+          ).textContent = `Formulário de Pedido - ${grupo
+            .toUpperCase()
+            .replace("-", " ")}`;
+          document.getElementById("formHeader").textContent = `Pedidos - ${grupo
+            .toUpperCase()
+            .replace("-", " ")}`;
+          form.action = `/pedido/${grupo}`;
+        }
 
-            form.addEventListener('submit', (event) => {
-                const solicitante = document.getElementById('solicitante').value;
-                const produtos = document.getElementById('produtos').value;
-                const comprovante = document.getElementById('comprovante').value;
+        form.addEventListener("submit", (event) => {
+          const solicitante = document.getElementById("solicitante").value;
+          const produtos = document.getElementById("produtos").value;
+          const comprovante = document.getElementById("comprovante").value;
 
-                if (!solicitante || !produtos || !comprovante) {
-                    event.preventDefault();
-                    alert('Por favor, preencha todos os campos obrigatórios.');
-                }
-            });
+          if (!solicitante || !produtos || !comprovante) {
+            event.preventDefault();
+            alert("Por favor, preencha todos os campos obrigatórios.");
+          }
         });
+      });
     </script>
-</body>
+  </body>
 </html>
