@@ -149,7 +149,7 @@ app.post('/pedido/:grupo', upload.single('comprovante'), (req, res) => {
         console.log(`Comprovante salvo em: ${comprovante.path}`);
 
         // --- AQUI ESTÁ A MUDANÇA: APENAS O REDIRECIONAMENTO ---
-        res.redirect(`/${grupo}`);
+        res.redirect(`/${grupo}?sucesso=true`);
     });
 });
 
