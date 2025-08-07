@@ -127,20 +127,22 @@ h1 {
 
     /* Layout do cabeçalho no celular: filtros no topo, lista embaixo */
     .controls-bar {
-        flex-direction: column;
-        align-items: flex-end;
+        flex-direction: column; /* Empilha a barra de busca e os botões */
+        align-items: stretch;
         gap: 15px;
     }
 
     .filter-buttons {
-        justify-content: center;
-        flex-wrap: wrap;
+        display: flex; /* Garante que os botões usem Flexbox */
+        justify-content: space-between; /* Distribui os botões uniformemente */
+        gap: 10px; /* Adiciona um pequeno espaço entre eles */
+        flex-wrap: wrap; /* Permite que os botões quebrem a linha se houver muitos */
     }
 
     .filter-btn {
         padding: 10px 18px;
         font-size: 14px;
-        flex-grow: 1;
+        flex-grow: 1; /* Faz com que os botões ocupem o espaço disponível */
     }
     
     /* Layout de Lista no Celular: uma coluna que ocupa toda a largura */
@@ -148,7 +150,7 @@ h1 {
         display: flex;
         flex-direction: column;
         gap: 15px;
-        flex-grow: 1; /* Ocupa o restante do espaço vertical */
+        flex-grow: 1;
     }
 
     /* Estilo para cada item na lista (exemplo) */
@@ -163,17 +165,22 @@ h1 {
 
 /* Telas menores que 480px (celulares muito pequenos) */
 @media (max-width: 480px) {
-    .filter-buttons {
-        flex-direction: column;
-        gap: 8px;
+    .controls-bar {
+        flex-direction: column; /* Empilha a barra de busca e os botões */
+        align-items: stretch;
+        gap: 15px;
     }
 
-    .filter-container {
-        width: 100%;
+    .filter-buttons {
+        display: flex; /* Garante que os botões usem Flexbox */
+        justify-content: space-between; /* Distribui os botões uniformemente */
+        gap: 10px; /* Adiciona um pequeno espaço entre eles */
+        flex-wrap: wrap; /* Permite que os botões quebrem a linha se houver muitos */
     }
 
     .filter-btn {
-        width: 100%;
-        text-align: center;
+        padding: 10px 18px;
+        font-size: 14px;
+        flex-grow: 1; /* Faz com que os botões ocupem o espaço disponível */
     }
 }
