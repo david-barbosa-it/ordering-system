@@ -28,7 +28,7 @@ const faqData = [
     question: "Onde encontro a tabela de produtos?",
     answer:
       "A tabela de produtos será enviada junto com o link de solicitação do pedido. Fiquem atentos às nossas comunicações!",
-    downloadLink: "/download/tabela-produtos-precos.pdf",
+    downloadLink: "/download/assets/tabela-produtos-precos.pdf",
   },
 ];
 
