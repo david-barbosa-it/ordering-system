@@ -17,7 +17,14 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
 
 // --- Configuração do Google Cloud Storage ---
-const gcs = new Storage();
+// const gcs = new Storage({
+//     keyFilename: 'gcs_key.json' // SUBSTITUA PELO CAMINHO DA SUA CHAVE
+// });
+
+const gcs = new Storage({
+    credentials: JSON.parse(process.env.GCS_KEY_JSON_STRING)
+});
+
 const bucketName = 'ordering-system-container'; // SUBSTITUA PELO NOME DO SEU BUCKET
 const bucket = gcs.bucket(bucketName);
 
