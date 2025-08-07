@@ -16,7 +16,6 @@ jspm_packages/
 *.d.ts
 
 # Compiled JavaScript
-*.js
 *.jsx
 *.mjs
 *.cjs
