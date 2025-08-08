@@ -41,9 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     ).toLocaleString()}</p>
                 </div>
                 <div class="pedido-actions">
-                    <a href="/uploads/${pedido.grupo}/${
-        pedido.comprovantePath
-      }" target="_blank" class="download-link">
+                    <a href="${pedido.comprovantePath}" target="_blank" class="download-link">
                         <i class="fas fa-file-alt"></i> Ver Anexo
                     </a>
                 </div>
